@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+  sql:
+    init:
+      mode: never
+
+vertex:
+  project-id: ${VERTEX_PROJECT_ID}
+  location: ${VERTEX_LOCATION:us-central1}
+  model-name: ${VERTEX_MODEL_NAME:gemini-2.5-flash}
+  credentials-path: ${VERTEX_CREDENTIALS_PATH:}
+
+
+weaviate:
+  base-url: ${WEAVIATE_BASE_URL}
+  api-key: ${WEAVIATE_API_KEY:}

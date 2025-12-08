@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Fact Check Result</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+<body>
+
+<a href="/" class="back-link">← New claim</a>
+
+<h2>Claim:</h2>
+<p th:text="${claim}">Claim text</p>
+
+<h2>Evidence:</h2>
+<div th:if="${#lists.isEmpty(evidence)}">
+    <p><i>No evidence found in the database.</i></p>
+</div>
+<div th:if="${!#lists.isEmpty(evidence)}">
+    <ul>
+        <li th:each="a : ${evidence}">
+            <b th:text="${a.title}">Article title</b>
+            <p th:text="${a.content}">Article content</p>
+            <small th:text="${a.source}">Source</small>
+        </li>
+    </ul>
+</div>
+
+<h2>Model Response:</h2>
+<div class="model-response" th:text="${response}">Model response</div>
+
+</body>
+</html>

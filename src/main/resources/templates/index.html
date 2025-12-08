@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Fact Check</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+<body>
+<form action="#" th:action="@{/verify}" method="post">
+    <label for="claim">Enter factual claim:</label>
+    <input type="text" id="claim" name="claim" required>
+    <button type="submit">Verify</button>
+</form>
+</body>
+</html>
