@@ -10,13 +10,21 @@ import java.nio.charset.StandardCharsets;
 public class PromptLoader {
 
     public String loadPrompt() {
-        try (InputStream is = getClass().getResourceAsStream("/prompt.txt")) {
+        return loadPrompt("factcheck");
+    }
+
+    /**
+     * Load a named prompt from /prompts/{name}.txt on the classpath.
+     */
+    public String loadPrompt(String name) {
+        String path = "/prompts/" + name + ".txt";
+        try (InputStream is = getClass().getResourceAsStream(path)) {
             if (is == null) {
-                throw new RuntimeException("Prompt file not found: /prompt.txt");
+                throw new RuntimeException("Prompt file not found: " + path);
             }
             return new String(is.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load prompt file", e);
+            throw new RuntimeException("Failed to load prompt file: " + path, e);
         }
     }
 }

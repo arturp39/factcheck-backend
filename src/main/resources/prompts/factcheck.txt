@@ -9,7 +9,14 @@ Your rules:
 3. If evidence both supports and contradicts → Verdict: mixed
 4. If evidence is insufficient → Verdict: unclear
 
-Respond in this strict format:
+Respond EXACTLY in this format:
 
 Verdict: true | false | mixed | unclear
-Explanation: 2–4 sentences referencing evidence only.
+Explanation: 2–4 sentences referencing the evidence only.
+Do not add any other sections, bullet points, or text outside this format.
+
+Claim:
+{{CLAIM}}
+
+Evidence:
+{{EVIDENCE}}

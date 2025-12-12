@@ -29,6 +29,7 @@ public class VertexAiService {
         this.mapper = new ObjectMapper();
     }
 
+    // 1) Main factcheck
     public String askModel(String claim, List<Article> evidence) {
         try {
             log.info("VertexAiService.askModel() called, claim length={}", claim.length());
@@ -41,12 +42,11 @@ public class VertexAiService {
             }
 
             String endpoint = authHelper.chatEndpoint();
-            String prompt = buildPrompt(claim, evidence);
-            log.debug("Prompt to Vertex (truncated)={}...",
+            String prompt = buildFactcheckPrompt(claim, evidence);
+            log.debug("Factcheck prompt (truncated)={}...",
                     prompt.substring(0, Math.min(prompt.length(), 500)));
 
             String requestBody = buildRequestBody(prompt);
-
             HttpResponse<String> response =
                     vertexApiClient.postJson(endpoint, requestBody);
 
@@ -64,20 +64,121 @@ public class VertexAiService {
         }
     }
 
-    private String buildPrompt(String claim, List<Article> evidence) {
-        String basePrompt = promptLoader.loadPrompt();
+    private String buildFactcheckPrompt(String claim, List<Article> evidence) {
+        String template = promptLoader.loadPrompt("factcheck");
 
-        String evidenceText = evidence == null || evidence.isEmpty()
+        String evidenceText = (evidence == null || evidence.isEmpty())
                 ? "(no evidence found)"
                 : evidence.stream()
                 .map(a -> a.getTitle() + " — " + a.getContent())
                 .collect(Collectors.joining("\n\n---\n\n"));
 
-        return basePrompt
-                + "\n\nClaim:\n" + claim
-                + "\n\nEvidence:\n" + evidenceText;
+        return template
+                .replace("{{CLAIM}}", claim)
+                .replace("{{EVIDENCE}}", evidenceText);
     }
 
+    // 2) Bias & limitations
+    public String analyzeBias(String claim, List<Article> evidence, String verdict) {
+        try {
+            if (evidence == null) {
+                evidence = List.of();
+            }
+
+            String endpoint = authHelper.chatEndpoint();
+            String prompt = buildBiasPrompt(claim, evidence, verdict);
+            log.debug("Bias prompt (truncated)={}...",
+                    prompt.substring(0, Math.min(prompt.length(), 500)));
+
+            String requestBody = buildRequestBody(prompt);
+            HttpResponse<String> response =
+                    vertexApiClient.postJson(endpoint, requestBody);
+
+            log.info("Vertex bias analysis status={}", response.statusCode());
+
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                return extractTextFromResponse(response.body());
+            } else {
+                return "Bias analysis error " + response.statusCode() + ": " + response.body();
+            }
+
+        } catch (Exception e) {
+            log.error("Error calling Vertex AI for bias analysis", e);
+            return "Error in bias analysis: " + e.getMessage();
+        }
+    }
+
+    private String buildBiasPrompt(String claim, List<Article> evidence, String verdict) {
+        String template = promptLoader.loadPrompt("bias");
+
+        String evidenceText = (evidence == null || evidence.isEmpty())
+                ? "(no evidence found)"
+                : evidence.stream()
+                .map(a -> a.getTitle() + " — " + a.getSource() + " — " + a.getContent())
+                .collect(Collectors.joining("\n\n---\n\n"));
+
+        return template
+                .replace("{{CLAIM}}", claim)
+                .replace("{{EVIDENCE}}", evidenceText)
+                .replace("{{VERDICT}}", verdict == null ? "unclear" : verdict);
+    }
+
+    // 3) Follow-up answers
+    public String answerFollowUp(String claim,
+                                 List<Article> evidence,
+                                 String verdict,
+                                 String explanation,
+                                 String followupQuestion) {
+        try {
+            if (evidence == null) {
+                evidence = List.of();
+            }
+
+            String endpoint = authHelper.chatEndpoint();
+            String prompt = buildFollowupPrompt(claim, evidence, verdict, explanation, followupQuestion);
+            log.debug("Follow-up prompt (truncated)={}...",
+                    prompt.substring(0, Math.min(prompt.length(), 500)));
+
+            String requestBody = buildRequestBody(prompt);
+            HttpResponse<String> response =
+                    vertexApiClient.postJson(endpoint, requestBody);
+
+            log.info("Vertex follow-up status={}", response.statusCode());
+
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                return extractTextFromResponse(response.body());
+            } else {
+                return "Follow-up error " + response.statusCode() + ": " + response.body();
+            }
+
+        } catch (Exception e) {
+            log.error("Error calling Vertex AI for follow-up", e);
+            return "Error in follow-up answer: " + e.getMessage();
+        }
+    }
+
+    private String buildFollowupPrompt(String claim,
+                                       List<Article> evidence,
+                                       String verdict,
+                                       String explanation,
+                                       String followupQuestion) {
+        String template = promptLoader.loadPrompt("followup");
+
+        String evidenceText = (evidence == null || evidence.isEmpty())
+                ? "(no evidence found)"
+                : evidence.stream()
+                .map(a -> a.getTitle() + " — " + a.getSource() + " — " + a.getContent())
+                .collect(Collectors.joining("\n\n---\n\n"));
+
+        return template
+                .replace("{{CLAIM}}", claim)
+                .replace("{{EVIDENCE}}", evidenceText)
+                .replace("{{VERDICT}}", verdict == null ? "unclear" : verdict)
+                .replace("{{EXPLANATION}}", explanation == null ? "(no explanation stored)" : explanation)
+                .replace("{{FOLLOWUP_QUESTION}}", followupQuestion);
+    }
+
+    // Shared helpers
     private String buildRequestBody(String prompt) throws Exception {
         var root = mapper.createObjectNode();
         var contents = root.putArray("contents");
