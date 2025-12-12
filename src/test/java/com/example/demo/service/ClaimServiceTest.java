@@ -53,7 +53,7 @@ class ClaimServiceTest {
                 .thenReturn(new float[]{0.1f, 0.2f, 0.3f});
 
         when(weaviateClientService.searchByVector(any(float[].class), eq(5)))
-                .thenReturn("{}"); // raw GraphQL JSON ignored by mocked parse
+                .thenReturn("{}");
 
         List<EvidenceChunk> chunks = List.of(
                 new EvidenceChunk("Title 1", "Content 1", "Source 1"),
