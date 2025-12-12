@@ -1,3 +1,6 @@
+server:
+  port: ${SERVER_PORT:8080}
+
 spring:
   datasource:
     url: ${DB_URL}
@@ -8,18 +11,37 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
 
   sql:
     init:
       mode: never
 
+# Vertex AI settings
 vertex:
   project-id: ${VERTEX_PROJECT_ID}
   location: ${VERTEX_LOCATION:us-central1}
   model-name: ${VERTEX_MODEL_NAME:gemini-2.5-flash}
   credentials-path: ${VERTEX_CREDENTIALS_PATH:}
 
-
+# Weaviate connection
 weaviate:
   base-url: ${WEAVIATE_BASE_URL}
   api-key: ${WEAVIATE_API_KEY:}
+
+# Python NLP / Embedding service
+nlp:
+  base-url: ${NLP_BASE_URL:http://nlp-service:8000}
+
+logging:
+  level:
+    root: INFO
+    com.example.demo: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%X{corrId}] %logger{36} - %msg%n"
+
+nlp-service:
+    url: ${NLP_SERVICE_URL:http://localhost:8000}
