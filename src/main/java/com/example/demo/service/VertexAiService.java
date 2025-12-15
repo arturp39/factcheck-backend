@@ -29,30 +29,33 @@ public class VertexAiService {
         this.mapper = new ObjectMapper();
     }
 
-    // 1) Main factcheck
+    // main factcheck
     public String askModel(String claim, List<Article> evidence) {
         try {
             log.info("VertexAiService.askModel() called, claim length={}", claim.length());
-            if (evidence != null) {
-                log.info("Evidence size={}", evidence.size());
-            }
 
             if (evidence == null) {
                 evidence = List.of();
             }
+            log.info("Evidence size={}", evidence.size());
 
             String endpoint = authHelper.chatEndpoint();
+
             String prompt = buildFactcheckPrompt(claim, evidence);
-            log.debug("Factcheck prompt (truncated)={}...",
-                    prompt.substring(0, Math.min(prompt.length(), 500)));
+
+            log.debug("LLM prompt  >>>\n{}\n<<< end prompt", prompt);
 
             String requestBody = buildRequestBody(prompt);
+
+            log.debug("LLM request body >>>\n{}\n<<< end request body", requestBody);
+
             HttpResponse<String> response =
                     vertexApiClient.postJson(endpoint, requestBody);
 
             log.info("Vertex response status={}", response.statusCode());
 
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                log.debug("Vertex raw response body >>>\n{}\n<<< end raw response", response.body());
                 return extractTextFromResponse(response.body());
             } else {
                 return "Vertex AI error " + response.statusCode() + ": " + response.body();

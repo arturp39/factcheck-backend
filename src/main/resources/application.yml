@@ -34,16 +34,14 @@ weaviate:
   base-url: ${WEAVIATE_BASE_URL}
   api-key: ${WEAVIATE_API_KEY:}
 
-# Python NLP / Embedding service
-nlp:
-  base-url: ${NLP_BASE_URL:http://nlp-service:8000}
-
 logging:
   level:
     root: INFO
     com.example.demo: DEBUG
+    com.example.demo.service.VertexAiService: DEBUG
+    com.example.demo.service.VertexApiClient: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%X{corrId}] %logger{36} - %msg%n"
 
 nlp-service:
-    url: ${NLP_SERVICE_URL:http://localhost:8000}
+    url: ${NLP_SERVICE_URL}
