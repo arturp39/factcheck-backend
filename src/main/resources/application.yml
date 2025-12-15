@@ -3,14 +3,14 @@ server:
 
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/factcheck}
+    username: ${SPRING_DATASOURCE_USERNAME:factcheck}
+    password: ${SPRING_DATASOURCE_PASSWORD:factcheck}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
     properties:
       hibernate.jdbc.time_zone: UTC
       hibernate:
@@ -31,7 +31,7 @@ vertex:
 
 # Weaviate connection
 weaviate:
-  base-url: ${WEAVIATE_BASE_URL}
+  base-url: ${WEAVIATE_BASE_URL:http://localhost:8082}
   api-key: ${WEAVIATE_API_KEY:}
 
 logging:
@@ -44,4 +44,4 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%X{corrId}] %logger{36} - %msg%n"
 
 nlp-service:
-    url: ${NLP_SERVICE_URL}
+  url: ${NLP_SERVICE_URL:http://localhost:8000}

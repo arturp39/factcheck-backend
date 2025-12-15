@@ -14,12 +14,13 @@ public class ClaimLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(name = "claim_text", columnDefinition = "TEXT", nullable = false)
     private String claimText;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "model_answer", columnDefinition = "TEXT")
     private String modelAnswer;
 
     private String verdict;
@@ -27,6 +28,6 @@ public class ClaimLog {
     @Column(columnDefinition = "TEXT")
     private String explanation;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "bias_analysis", columnDefinition = "TEXT")
     private String biasAnalysis;
 }
