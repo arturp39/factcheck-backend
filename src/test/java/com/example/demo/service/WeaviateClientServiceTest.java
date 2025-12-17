@@ -14,6 +14,7 @@ class WeaviateClientServiceTest {
         WeaviateProperties props = new WeaviateProperties();
         props.setBaseUrl("http://localhost:8080");
         props.setApiKey(null);
+        props.setMaxDistance(0.5f);
 
         WeaviateClientService service = new WeaviateClientService(props);
 
@@ -55,6 +56,7 @@ class WeaviateClientServiceTest {
         WeaviateProperties props = new WeaviateProperties();
         props.setBaseUrl("http://localhost:8080");
         props.setApiKey(null);
+        props.setMaxDistance(0.5f);
 
         WeaviateClientService service = new WeaviateClientService(props);
 

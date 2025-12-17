@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -33,7 +32,6 @@ class ClaimServiceTest {
     @Mock
     private WeaviateClientService weaviateClientService;
 
-    @InjectMocks
     private ClaimService claimService;
 
     private ClaimLog existingLog;
@@ -43,6 +41,8 @@ class ClaimServiceTest {
         existingLog = new ClaimLog();
         existingLog.setId(1L);
         existingLog.setClaimText("The Earth is flat");
+
+        claimService = new ClaimService(claimLogRepository, nlpServiceClient, weaviateClientService, 5);
     }
 
     @Test

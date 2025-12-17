@@ -10,4 +10,5 @@
     public class WeaviateProperties {
         private String baseUrl;
         private String apiKey;
+        private float maxDistance = 0.5f;
     }

@@ -73,7 +73,7 @@ public class VertexAiService {
         String evidenceText = (evidence == null || evidence.isEmpty())
                 ? "(no evidence found)"
                 : evidence.stream()
-                .map(a -> a.getTitle() + " — " + a.getContent())
+                .map(a -> a.getTitle() + " | " + a.getContent())
                 .collect(Collectors.joining("\n\n---\n\n"));
 
         return template
@@ -117,7 +117,7 @@ public class VertexAiService {
         String evidenceText = (evidence == null || evidence.isEmpty())
                 ? "(no evidence found)"
                 : evidence.stream()
-                .map(a -> a.getTitle() + " — " + a.getSource() + " — " + a.getContent())
+                .map(a -> a.getTitle() + " | " + a.getSource() + " | " + a.getContent())
                 .collect(Collectors.joining("\n\n---\n\n"));
 
         return template
@@ -170,7 +170,7 @@ public class VertexAiService {
         String evidenceText = (evidence == null || evidence.isEmpty())
                 ? "(no evidence found)"
                 : evidence.stream()
-                .map(a -> a.getTitle() + " — " + a.getSource() + " — " + a.getContent())
+                .map(a -> a.getTitle() + " | " + a.getSource() + " | " + a.getContent())
                 .collect(Collectors.joining("\n\n---\n\n"));
 
         return template

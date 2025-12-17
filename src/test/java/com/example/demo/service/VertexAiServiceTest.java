@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.net.http.HttpResponse;
@@ -33,7 +34,7 @@ class VertexAiServiceTest {
 
     @SuppressWarnings("unchecked")
     private HttpResponse<String> mockVertexResponse(String body) {
-        HttpResponse<String> resp = (HttpResponse<String>) org.mockito.Mockito.mock(HttpResponse.class);
+        HttpResponse<String> resp = (HttpResponse<String>) Mockito.mock(HttpResponse.class);
         when(resp.statusCode()).thenReturn(200);
         when(resp.body()).thenReturn(body);
         return resp;

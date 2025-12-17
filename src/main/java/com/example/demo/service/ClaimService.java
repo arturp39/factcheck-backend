@@ -6,6 +6,7 @@ import com.example.demo.integration.nlp.NlpServiceClient;
 import com.example.demo.repository.ClaimLogRepository;
 import com.example.demo.service.WeaviateClientService.EvidenceChunk;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,13 +20,16 @@ public class ClaimService {
     private final ClaimLogRepository claimRepo;
     private final NlpServiceClient nlpServiceClient;
     private final WeaviateClientService weaviateClientService;
+    private final int searchTopK;
 
     public ClaimService(ClaimLogRepository claimRepo,
                         NlpServiceClient nlpServiceClient,
-                        WeaviateClientService weaviateClientService) {
+                        WeaviateClientService weaviateClientService,
+                        @Value("${app.search.top-k:5}") int searchTopK) {
         this.claimRepo = claimRepo;
         this.nlpServiceClient = nlpServiceClient;
         this.weaviateClientService = weaviateClientService;
+        this.searchTopK = searchTopK;
     }
 
     public List<Article> searchEvidence(String claim) {
@@ -40,7 +44,7 @@ public class ClaimService {
             log.info("Claim embedding length={}", claimVector.length);
 
             // 2) Search Weaviate
-            String graphqlResponse = weaviateClientService.searchByVector(claimVector, 5);
+            String graphqlResponse = weaviateClientService.searchByVector(claimVector, searchTopK);
             List<EvidenceChunk> chunks =
                     weaviateClientService.parseEvidenceChunks(graphqlResponse);
 

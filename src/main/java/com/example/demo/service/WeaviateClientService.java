@@ -21,9 +21,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WeaviateClientService {
 
-    // Distance threshold
-    private static final float MAX_DISTANCE = 0.5f;
-
     private final WeaviateProperties props;
     private final ObjectMapper mapper = new ObjectMapper();
     private final HttpClient client = HttpClient.newBuilder()
@@ -84,7 +81,7 @@ public class WeaviateClientService {
      *  - sourceName
      *  - _additional { distance }
      */
-    private static String buildQuery(float[] vector, int limit) {
+    private String buildQuery(float[] vector, int limit) {
         StringBuilder vecBuilder = new StringBuilder("[");
         for (int i = 0; i < vector.length; i++) {
             if (i > 0) vecBuilder.append(",");
@@ -103,7 +100,7 @@ public class WeaviateClientService {
                         " _additional { distance }" +
                         " } } }",
                 vecBuilder,
-                MAX_DISTANCE,
+                props.getMaxDistance(),
                 limit
         );
     }
@@ -125,7 +122,7 @@ public class WeaviateClientService {
                 JsonNode distNode = n.path("_additional").path("distance");
                 float distance = distNode.isMissingNode() ? 1.0f : (float) distNode.asDouble();
 
-                if (distance > MAX_DISTANCE) {
+                if (distance > props.getMaxDistance()) {
                     continue;
                 }
 

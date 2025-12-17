@@ -4,6 +4,8 @@ import com.example.demo.entity.Article;
 import com.example.demo.entity.ClaimLog;
 import com.example.demo.service.ClaimService;
 import com.example.demo.service.VertexAiService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -11,14 +13,19 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Controller
+@Slf4j
 public class ClaimController {
 
     private final ClaimService claimService;
     private final VertexAiService vertexService;
+    private final int claimMaxLength;
 
-    public ClaimController(ClaimService claimService, VertexAiService vertexService) {
+    public ClaimController(ClaimService claimService,
+                           VertexAiService vertexService,
+                           @Value("${app.claim.max-length:400}") int claimMaxLength) {
         this.claimService = claimService;
         this.vertexService = vertexService;
+        this.claimMaxLength = claimMaxLength;
     }
 
     @PostMapping("/verify")
@@ -30,19 +37,19 @@ public class ClaimController {
             return "index";
         }
 
-        if (normalized.length() > 400) {
-            model.addAttribute("error", "Claim is too long. Please keep it under 400 characters.");
+        if (normalized.length() > claimMaxLength) {
+            model.addAttribute("error", "Claim is too long. Please keep it under " + claimMaxLength + " characters.");
             return "index";
         }
 
-        System.out.println(">>> ClaimController.verify CALLED with claim = " + normalized);
+        log.info("verify called claimLength={}", normalized.length());
 
         // Save claim log
         ClaimLog saved = claimService.saveClaim(normalized);
 
         // Search evidence in Weaviate
         List<Article> evidence = claimService.searchEvidence(normalized);
-        System.out.println(">>> /verify evidence size = " + evidence.size());
+        log.info("verify evidenceSize={}", evidence.size());
 
         // Main fact-check
         String aiResponse = vertexService.askModel(normalized, evidence);

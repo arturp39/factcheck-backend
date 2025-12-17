@@ -29,10 +29,11 @@ vertex:
   model-name: ${VERTEX_MODEL_NAME:gemini-2.5-flash}
   credentials-path: ${VERTEX_CREDENTIALS_PATH:}
 
-# Weaviate connection
+# Weaviate cfg
 weaviate:
   base-url: ${WEAVIATE_BASE_URL:http://localhost:8082}
   api-key: ${WEAVIATE_API_KEY:}
+  max-distance: ${WEAVIATE_MAX_DISTANCE:0.5}
 
 logging:
   level:
@@ -45,3 +46,12 @@ logging:
 
 nlp-service:
   url: ${NLP_SERVICE_URL:http://localhost:8000}
+
+app:
+  claim:
+    max-length: ${APP_CLAIM_MAX_LENGTH:400}
+  search:
+    top-k: ${APP_SEARCH_TOP_K:5}
+  restclient:
+    connect-timeout-ms: ${APP_REST_CONNECT_TIMEOUT_MS:3000}
+    read-timeout-ms: ${APP_REST_READ_TIMEOUT_MS:30000}
