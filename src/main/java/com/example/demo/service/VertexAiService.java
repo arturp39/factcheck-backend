@@ -41,6 +41,7 @@ public class VertexAiService {
 
             String endpoint = authHelper.chatEndpoint();
 
+            // Build a fact-check prompt by injecting the claim and condensed evidence
             String prompt = buildFactcheckPrompt(claim, evidence);
 
             log.debug("LLM prompt  >>>\n{}\n<<< end prompt", prompt);
@@ -89,6 +90,7 @@ public class VertexAiService {
             }
 
             String endpoint = authHelper.chatEndpoint();
+            // Bias prompt
             String prompt = buildBiasPrompt(claim, evidence, verdict);
             log.debug("Bias prompt (truncated)={}...",
                     prompt.substring(0, Math.min(prompt.length(), 500)));
@@ -138,6 +140,7 @@ public class VertexAiService {
             }
 
             String endpoint = authHelper.chatEndpoint();
+            // Follow-up prompt
             String prompt = buildFollowupPrompt(claim, evidence, verdict, explanation, followupQuestion);
             log.debug("Follow-up prompt (truncated)={}...",
                     prompt.substring(0, Math.min(prompt.length(), 500)));

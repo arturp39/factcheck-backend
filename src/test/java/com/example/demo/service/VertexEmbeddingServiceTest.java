@@ -65,4 +65,52 @@ class VertexEmbeddingServiceTest {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Embedding error 500");
     }
+
+    @Test
+    void embedText_throwsWhenEmbeddingsMissing() throws Exception {
+        when(authHelper.embeddingEndpoint()).thenReturn("https://example.com/embed");
+
+        String json = """
+                {
+                  "predictions": [
+                    {
+                      "embeddings": {
+                        "values": []
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        HttpResponse<String> httpResp = mock(HttpResponse.class);
+        when(httpResp.statusCode()).thenReturn(200);
+        when(httpResp.body()).thenReturn(json);
+
+        when(vertexApiClient.postJson(anyString(), anyString()))
+                .thenReturn(httpResp);
+
+        assertThatThrownBy(() -> embeddingService.embedText("text"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("No embeddings.values field");
+    }
+
+    @Test
+    void embedText_throwsWhenPredictionsMissing() throws Exception {
+        when(authHelper.embeddingEndpoint()).thenReturn("https://example.com/embed");
+
+        String json = """
+                {
+                  "predictions": []
+                }
+                """;
+
+        HttpResponse<String> httpResp = mock(HttpResponse.class);
+        when(httpResp.statusCode()).thenReturn(200);
+        when(httpResp.body()).thenReturn(json);
+        when(vertexApiClient.postJson(anyString(), anyString())).thenReturn(httpResp);
+
+        assertThatThrownBy(() -> embeddingService.embedText("text"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("No predictions field in embedding response");
+    }
 }

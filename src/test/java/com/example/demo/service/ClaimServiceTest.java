@@ -131,6 +131,27 @@ class ClaimServiceTest {
     }
 
     @Test
+    void storeModelAnswerHandlesNullAnswer() {
+        when(claimLogRepository.findById(1L)).thenReturn(Optional.of(existingLog));
+
+        ClaimService.ParsedAnswer parsed = claimService.storeModelAnswer(1L, null);
+
+        assertThat(parsed.verdict()).isEqualTo("unclear");
+        assertThat(parsed.explanation()).contains("(no explanation)");
+    }
+
+    @Test
+    void storeModelAnswerDefaultsExplanationWhenBlank() {
+        String rawAnswer = "Verdict: false";
+        when(claimLogRepository.findById(1L)).thenReturn(Optional.of(existingLog));
+
+        ClaimService.ParsedAnswer parsed = claimService.storeModelAnswer(1L, rawAnswer);
+
+        assertThat(parsed.verdict()).isEqualTo("false");
+        assertThat(parsed.explanation()).isEqualTo("(no explanation)");
+    }
+
+    @Test
     void storeBiasAnalysis_updatesClaimLog() {
         when(claimLogRepository.findById(1L)).thenReturn(Optional.of(existingLog));
 

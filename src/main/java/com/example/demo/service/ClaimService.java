@@ -39,18 +39,18 @@ public class ClaimService {
             String correlationId = UUID.randomUUID().toString();
             log.debug("Generated correlationId={} for claim", correlationId);
 
-            // 1) Embedding via Python NLP service
+            // Embed the claim once so Weaviate vector search can be used
             float[] claimVector = nlpServiceClient.embedSingleToVector(claim, correlationId);
             log.info("Claim embedding length={}", claimVector.length);
 
-            // 2) Search Weaviate
+            // Send the vector to Weaviate and parse the returned chunks
             String graphqlResponse = weaviateClientService.searchByVector(claimVector, searchTopK);
             List<EvidenceChunk> chunks =
                     weaviateClientService.parseEvidenceChunks(graphqlResponse);
 
             log.info("Weaviate returned {} evidence chunks", chunks.size());
 
-            // 3) Map to Article DTO for UI
+            // Map raw chunks into Article objects expected by the UI
             return chunks.stream()
                     .map(c -> {
                         Article a = new Article();

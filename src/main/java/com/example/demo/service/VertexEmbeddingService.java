@@ -26,6 +26,7 @@ public class VertexEmbeddingService {
             log.info("Requesting embedding for text length={}", text.length());
 
             String endpoint = authHelper.embeddingEndpoint();
+            // Build a Vertex embedding request
             String requestBody = buildRequestBody(text);
 
             HttpResponse<String> resp = vertexApiClient.postJson(endpoint, requestBody);

@@ -57,7 +57,6 @@ public class ClaimController {
         // Parse + store verdict and explanation
         ClaimService.ParsedAnswer parsed = claimService.storeModelAnswer(saved.getId(), aiResponse);
 
-
         // Model attributes for result page
         model.addAttribute("claimId", saved.getId());
         model.addAttribute("claim", normalized);

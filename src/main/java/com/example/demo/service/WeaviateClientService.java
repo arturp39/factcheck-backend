@@ -46,7 +46,34 @@ public class WeaviateClientService {
                                      String content,
                                      String source,
                                      float[] vector) {
-        throw new UnsupportedOperationException("Use the ingestion service to write chunks to Weaviate");
+        try {
+            if (vector == null || vector.length == 0) {
+                throw new IllegalArgumentException("Vector must not be empty");
+            }
+            // safe fallback source so Weaviate objects are labeled even when caller omits it
+            String safeSource = (source == null || source.isBlank()) ? "manual" : source;
+            String requestBody = buildInsertBody(title, content, safeSource, vector);
+
+            HttpRequest request = requestBuilder("/v1/objects")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                    .build();
+
+            HttpResponse<String> resp =
+                    client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
+                log.error("Weaviate insertArticleChunk failed status={} body={}",
+                        resp.statusCode(), resp.body());
+                throw new IllegalStateException("Weaviate insert HTTP " + resp.statusCode());
+            }
+
+            log.info("Inserted manual article chunk title={} source={} status={}",
+                    title, safeSource, resp.statusCode());
+            return resp.body();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to insert article chunk into Weaviate", e);
+        }
     }
 
     public String searchByVector(float[] vector, int limit) throws Exception {
@@ -89,6 +116,7 @@ public class WeaviateClientService {
         }
         vecBuilder.append("]");
 
+        // GraphQL matches collector schema so only needed fields are returned
         return String.format(
                 java.util.Locale.US,
                 "{ Get { ArticleChunk(" +
@@ -103,6 +131,29 @@ public class WeaviateClientService {
                 props.getMaxDistance(),
                 limit
         );
+    }
+
+    private String buildInsertBody(String title,
+                                   String content,
+                                   String source,
+                                   float[] vector) throws Exception {
+        ObjectNode root = mapper.createObjectNode();
+        root.put("class", "ArticleChunk");
+
+        ObjectNode props = root.putObject("properties");
+        props.put("text", content);
+        props.put("articleTitle", title);
+        props.put("sourceName", source);
+        props.put("articleId", 0);
+        props.put("articleUrl", "");
+        props.put("publishedDate", java.time.Instant.now().toString());
+        props.put("chunkIndex", 0);
+
+        var vectorNode = root.putArray("vector");
+        for (float v : vector) {
+            vectorNode.add(v);
+        }
+        return mapper.writeValueAsString(root);
     }
 
     public List<EvidenceChunk> parseEvidenceChunks(String graphqlResponse) throws Exception {
@@ -126,6 +177,7 @@ public class WeaviateClientService {
                     continue;
                 }
 
+                // Extract only the fields for ui
                 String title   = n.path("articleTitle").asText("");
                 String content = n.path("text").asText("");
                 String source  = n.path("sourceName").asText("");

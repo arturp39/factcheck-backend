@@ -13,6 +13,7 @@ import java.net.http.HttpResponse;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -152,5 +153,53 @@ class VertexAiServiceTest {
 
         assertThat(result).contains("Short follow-up answer.");
         verify(promptLoader).loadPrompt("followup");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void askModel_returnsErrorMessageOnNon2xx() throws Exception {
+        when(promptLoader.loadPrompt("factcheck")).thenReturn("{{CLAIM}} {{EVIDENCE}}");
+        when(authHelper.chatEndpoint()).thenReturn("https://dummy-chat");
+
+        HttpResponse<String> resp = (HttpResponse<String>) Mockito.mock(HttpResponse.class);
+        when(resp.statusCode()).thenReturn(500);
+        when(resp.body()).thenReturn("fail");
+        when(vertexApiClient.postJson(eq("https://dummy-chat"), anyString()))
+                .thenReturn(resp);
+
+        String result = vertexAiService.askModel("claim", List.of());
+        assertThat(result).contains("Vertex AI error 500");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void analyzeBias_returnsErrorMessageOnFailure() throws Exception {
+        when(promptLoader.loadPrompt("bias")).thenReturn("{{CLAIM}} {{EVIDENCE}} {{VERDICT}}");
+        when(authHelper.chatEndpoint()).thenReturn("https://dummy-chat");
+
+        HttpResponse<String> resp = (HttpResponse<String>) Mockito.mock(HttpResponse.class);
+        when(resp.statusCode()).thenReturn(503);
+        when(resp.body()).thenReturn("unavailable");
+        when(vertexApiClient.postJson(eq("https://dummy-chat"), anyString()))
+                .thenReturn(resp);
+
+        String result = vertexAiService.analyzeBias("c", List.of(), "mixed");
+        assertThat(result).contains("Bias analysis error 503");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void answerFollowUp_returnsErrorMessageOnFailure() throws Exception {
+        when(promptLoader.loadPrompt("followup")).thenReturn("{{CLAIM}} {{FOLLOWUP_QUESTION}}");
+        when(authHelper.chatEndpoint()).thenReturn("https://dummy-chat");
+
+        HttpResponse<String> resp = (HttpResponse<String>) Mockito.mock(HttpResponse.class);
+        when(resp.statusCode()).thenReturn(500);
+        when(resp.body()).thenReturn("fail");
+        when(vertexApiClient.postJson(eq("https://dummy-chat"), anyString()))
+                .thenReturn(resp);
+
+        String result = vertexAiService.answerFollowUp("c", List.of(), "v", "e", "q");
+        assertThat(result).contains("Follow-up error 500");
     }
 }
