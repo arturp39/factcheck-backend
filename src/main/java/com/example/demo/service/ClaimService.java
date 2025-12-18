@@ -7,7 +7,11 @@ import com.example.demo.repository.ClaimLogRepository;
 import com.example.demo.service.WeaviateClientService.EvidenceChunk;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -32,6 +36,7 @@ public class ClaimService {
         this.searchTopK = searchTopK;
     }
 
+    @Transactional(readOnly = true)
     public List<Article> searchEvidence(String claim) {
         log.info("searchEvidence() called with claim='{}'", claim);
 
@@ -67,6 +72,7 @@ public class ClaimService {
         }
     }
 
+    @Transactional
     public ClaimLog saveClaim(String claim) {
         ClaimLog logEntity = new ClaimLog();
         logEntity.setClaimText(claim);
@@ -75,6 +81,7 @@ public class ClaimService {
         return saved;
     }
 
+    @Transactional
     public ParsedAnswer storeModelAnswer(Long claimId, String answer) {
         log.info("Storing model answer for claimId={}", claimId);
 
@@ -89,6 +96,7 @@ public class ClaimService {
         return parsed;
     }
 
+    @Transactional
     public void storeBiasAnalysis(Long claimId, String biasText) {
         log.info("Storing bias analysis for claimId={}", claimId);
         ClaimLog logEntity = getClaim(claimId);
@@ -96,12 +104,25 @@ public class ClaimService {
         claimRepo.save(logEntity);
     }
 
+    @Transactional(readOnly = true)
     public ClaimLog getClaim(Long id) {
         return claimRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Claim not found: " + id));
     }
 
-    private ParsedAnswer parseAnswer(String answer) {
+    @Transactional(readOnly = true)
+    public List<ClaimLog> listClaims(int requestedLimit) {
+        int limit = Math.max(1, Math.min(requestedLimit, 100));
+        Pageable pageable = PageRequest.of(
+                0,
+                limit,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+                        .and(Sort.by(Sort.Direction.DESC, "id"))
+        );
+        return claimRepo.findAll(pageable).getContent();
+    }
+
+    public ParsedAnswer parseAnswer(String answer) {
         if (answer == null) {
             return new ParsedAnswer("unclear", "(no explanation)", null);
         }

@@ -3,10 +3,19 @@ package com.example.demo.controller;
 import com.example.demo.service.VertexEmbeddingService;
 import com.example.demo.service.WeaviateClientService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+        value = "app.admin.article-creation-enabled",
+        havingValue = "true",
+        matchIfMissing = false
+)
 @RequestMapping("/admin/articles")
 public class ArticleAdminController {
 

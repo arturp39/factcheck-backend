@@ -55,3 +55,5 @@ app:
   restclient:
     connect-timeout-ms: ${APP_REST_CONNECT_TIMEOUT_MS:3000}
     read-timeout-ms: ${APP_REST_READ_TIMEOUT_MS:30000}
+  admin:
+    article-creation-enabled: ${APP_ADMIN_ARTICLE_CREATION_ENABLED:false}

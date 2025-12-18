@@ -44,7 +44,7 @@ public class ClaimController {
 
         log.info("verify called claimLength={}", normalized.length());
 
-        // Save claim log
+        // Save claim log to factcheck schema
         ClaimLog saved = claimService.saveClaim(normalized);
 
         // Search evidence in Weaviate

@@ -14,6 +14,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -139,4 +140,54 @@ public class WeaviateClientService {
         log.info("parseEvidenceChunks() extracted {} chunks", chunks.size());
         return chunks;
     }
+
+    public List<String> getChunksForArticle(long articleId) throws Exception {
+        String gql = String.format(
+                java.util.Locale.US,
+                "{ Get { ArticleChunk(where: { path: [\"articleId\"], operator: Equal, valueInt: %d }, " +
+                        "limit: 512, sort: [{ path: [\"chunkIndex\"], order: asc }]) { text chunkIndex } } }",
+                articleId
+        );
+
+        ObjectNode root = mapper.createObjectNode();
+        root.put("query", gql);
+
+        HttpRequest request = requestBuilder("/v1/graphql")
+                .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(root)))
+                .build();
+
+        HttpResponse<String> resp =
+                client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
+            log.error("Weaviate getChunksForArticle failed status={} body={}",
+                    resp.statusCode(), resp.body());
+            throw new IllegalStateException("Weaviate GraphQL HTTP " + resp.statusCode());
+        }
+
+        JsonNode rootNode = mapper.readTree(resp.body());
+        JsonNode errors = rootNode.path("errors");
+        if (errors.isArray() && !errors.isEmpty()) {
+            log.warn("Weaviate GraphQL errors in getChunksForArticle: {}", errors);
+        }
+
+        JsonNode data = rootNode.path("data").path("Get").path("ArticleChunk");
+        if (!data.isArray()) return List.of();
+
+        List<ChunkItem> chunks = new ArrayList<>();
+        for (JsonNode n : data) {
+            String text = n.path("text").asText("");
+            int idx = n.path("chunkIndex").asInt(0);
+            if (text == null || text.isBlank()) continue;
+            chunks.add(new ChunkItem(idx, text));
+        }
+
+        chunks.sort(Comparator.comparingInt(ChunkItem::index));
+
+        List<String> ordered = new ArrayList<>(chunks.size());
+        for (ChunkItem c : chunks) ordered.add(c.text());
+        return ordered;
+    }
+
+    private record ChunkItem(int index, String text) {}
 }
