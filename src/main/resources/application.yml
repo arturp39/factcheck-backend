@@ -55,3 +55,12 @@ app:
   restclient:
     connect-timeout-ms: ${APP_REST_CONNECT_TIMEOUT_MS:3000}
     read-timeout-ms: ${APP_REST_READ_TIMEOUT_MS:30000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized

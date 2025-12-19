@@ -6,6 +6,8 @@ import com.example.demo.integration.nlp.NlpServiceClient;
 import com.example.demo.repository.ClaimLogRepository;
 import com.example.demo.service.WeaviateClientService.EvidenceChunk;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -33,14 +35,20 @@ public class ClaimService {
     }
 
     public List<Article> searchEvidence(String claim) {
+        return searchEvidence(claim, null);
+    }
+
+    public List<Article> searchEvidence(String claim, String correlationId) {
         log.info("searchEvidence() called with claim='{}'", claim);
 
         try {
-            String correlationId = UUID.randomUUID().toString();
-            log.debug("Generated correlationId={} for claim", correlationId);
+            String cid = (correlationId != null && !correlationId.isBlank())
+                    ? correlationId
+                    : UUID.randomUUID().toString();
+            log.debug("Using correlationId={} for claim", cid);
 
             // Embed the claim once so Weaviate vector search can be used
-            float[] claimVector = nlpServiceClient.embedSingleToVector(claim, correlationId);
+            float[] claimVector = nlpServiceClient.embedSingleToVector(claim, cid);
             log.info("Claim embedding length={}", claimVector.length);
 
             // Send the vector to Weaviate and parse the returned chunks
@@ -99,6 +107,10 @@ public class ClaimService {
     public ClaimLog getClaim(Long id) {
         return claimRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Claim not found: " + id));
+    }
+
+    public Page<ClaimLog> listClaims(Pageable pageable) {
+        return claimRepo.findAll(pageable);
     }
 
     private ParsedAnswer parseAnswer(String answer) {
